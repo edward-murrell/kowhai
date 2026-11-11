@@ -1,0 +1,1683 @@
+openapi: 3.0.3
+info:
+  title: Kōwhai API
+  version: 1.0.0
+  description: |
+    REST API for Kōwhai boards. The web app uses only this API.
+
+    Authenticate with the browser session cookie or a personal access token
+    sent as `Authorization: Bearer kowhai_pat_...`. Cookie-authenticated
+    requests that change state must send the `X-Kowhai-CSRF` header with the
+    value of the `kowhai_csrf` cookie.
+
+    Updates take an optional `If-Match` header holding the resource version.
+    A stale version returns `412`. Errors use `application/problem+json`.
+servers:
+  - url: /api/v1
+security:
+  - cookieAuth: []
+  - bearerAuth: []
+tags:
+  - name: me
+  - name: workspaces
+  - name: boards
+  - name: lists
+  - name: cards
+  - name: checklists
+  - name: comments
+  - name: attachments
+  - name: links
+  - name: recurrences
+  - name: search
+  - name: admin
+
+paths:
+  /me:
+    get:
+      operationId: getMe
+      tags: [me]
+      responses:
+        '200': { description: 'The current user', content: { application/json: { schema: { $ref: '#/components/schemas/Me' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /me/notifications:
+    get:
+      operationId: listNotifications
+      tags: [me]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+        - { name: unread, in: query, schema: { type: boolean } }
+      responses:
+        '200': { description: 'Notifications, newest first', content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPage' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /me/notifications/read-all:
+    post:
+      operationId: readAllNotifications
+      tags: [me]
+      responses:
+        '204': { description: 'All notifications marked read' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /me/notifications/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateNotification
+      tags: [me]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateNotification' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/Notification' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /me/notification-prefs:
+    get:
+      operationId: getNotificationPrefs
+      tags: [me]
+      responses:
+        '200': { description: 'Preferences', content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPrefs' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: putNotificationPrefs
+      tags: [me]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPrefs' } } }
+      responses:
+        '200': { description: 'Saved', content: { application/json: { schema: { $ref: '#/components/schemas/NotificationPrefs' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /me/events:
+    get:
+      operationId: userEvents
+      tags: [me]
+      description: Server-sent events for the current user. Emits `notification` and `unread` events.
+      responses:
+        '200': { description: 'Event stream', content: { text/event-stream: { schema: { type: string } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /me/tokens:
+    get:
+      operationId: listTokens
+      tags: [me]
+      responses:
+        '200': { description: 'Tokens', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Token' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createToken
+      tags: [me]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateToken' } } }
+      responses:
+        '201': { description: 'Created. The token value is shown only here.', content: { application/json: { schema: { $ref: '#/components/schemas/CreatedToken' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /me/tokens/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    delete:
+      operationId: revokeToken
+      tags: [me]
+      responses:
+        '204': { description: 'Revoked' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /users:
+    get:
+      operationId: searchUsers
+      tags: [me]
+      description: Find users by name or email, for adding members.
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: 'Matching users', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/User' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces:
+    get:
+      operationId: listWorkspaces
+      tags: [workspaces]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: 'Workspaces the caller belongs to', content: { application/json: { schema: { $ref: '#/components/schemas/WorkspacePage' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createWorkspace
+      tags: [workspaces]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateWorkspace' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/Workspace' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: getWorkspace
+      tags: [workspaces]
+      responses:
+        '200': { description: 'Workspace', content: { application/json: { schema: { $ref: '#/components/schemas/Workspace' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateWorkspace
+      tags: [workspaces]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateWorkspace' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/Workspace' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteWorkspace
+      tags: [workspaces]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces/{id}/members:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listWorkspaceMembers
+      tags: [workspaces]
+      responses:
+        '200': { description: 'Members', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/WorkspaceMember' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: addWorkspaceMember
+      tags: [workspaces]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AddWorkspaceMember' } } }
+      responses:
+        '201': { description: 'Added', content: { application/json: { schema: { $ref: '#/components/schemas/WorkspaceMember' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces/{id}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/ID'
+      - $ref: '#/components/parameters/UserID'
+    patch:
+      operationId: updateWorkspaceMember
+      tags: [workspaces]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateWorkspaceMember' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/WorkspaceMember' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeWorkspaceMember
+      tags: [workspaces]
+      responses:
+        '204': { description: 'Removed' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces/{id}/invites:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listWorkspaceInvites
+      tags: [workspaces]
+      responses:
+        '200': { description: 'Pending invites', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/WorkspaceInvite' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createWorkspaceInvite
+      tags: [workspaces]
+      description: Invite by email. An existing user with that email is added at once. Otherwise the invite is accepted on their first login.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateInvite' } } }
+      responses:
+        '201': { description: 'Invited', content: { application/json: { schema: { $ref: '#/components/schemas/InviteResult' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces/{id}/invites/{inviteId}:
+    parameters:
+      - $ref: '#/components/parameters/ID'
+      - { name: inviteId, in: path, required: true, schema: { type: string } }
+    delete:
+      operationId: deleteWorkspaceInvite
+      tags: [workspaces]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces/{id}/boards:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listWorkspaceBoards
+      tags: [boards]
+      parameters:
+        - { name: archived, in: query, schema: { type: boolean } }
+      responses:
+        '200': { description: 'Boards the caller can see', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Board' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createBoard
+      tags: [boards]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateBoard' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/Board' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces/{id}/templates:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listBoardTemplates
+      tags: [boards]
+      responses:
+        '200': { description: 'Board templates in this workspace', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Board' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /workspaces/{id}/templates/builtin:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listBuiltinTemplates
+      tags: [boards]
+      responses:
+        '200': { description: 'Built-in templates that can be added to the workspace', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/BuiltinTemplate' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: seedBuiltinTemplate
+      tags: [boards]
+      description: Add a built-in template board to the workspace. Returns the existing one if already added.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/SeedTemplate' } } }
+      responses:
+        '201': { description: 'Template board', content: { application/json: { schema: { $ref: '#/components/schemas/Board' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: getBoard
+      tags: [boards]
+      responses:
+        '200': { description: 'Board', content: { application/json: { schema: { $ref: '#/components/schemas/Board' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateBoard
+      tags: [boards]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateBoard' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/Board' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteBoard
+      tags: [boards]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/full:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: getBoardFull
+      tags: [boards]
+      parameters:
+        - { name: archived, in: query, description: 'Include archived lists and cards', schema: { type: boolean } }
+      responses:
+        '200': { description: 'Board with lists, cards, labels and members', content: { application/json: { schema: { $ref: '#/components/schemas/BoardFull' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/copy:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: copyBoard
+      tags: [boards]
+      description: Copy a board, or create a board from a template.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CopyBoard' } } }
+      responses:
+        '201': { description: 'The new board', content: { application/json: { schema: { $ref: '#/components/schemas/Board' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/members:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listBoardMembers
+      tags: [boards]
+      responses:
+        '200': { description: 'Board members', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/BoardMember' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: addBoardMember
+      tags: [boards]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AddBoardMember' } } }
+      responses:
+        '201': { description: 'Added', content: { application/json: { schema: { $ref: '#/components/schemas/BoardMember' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/ID'
+      - $ref: '#/components/parameters/UserID'
+    patch:
+      operationId: updateBoardMember
+      tags: [boards]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateBoardMember' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/BoardMember' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeBoardMember
+      tags: [boards]
+      responses:
+        '204': { description: 'Removed' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/labels:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listLabels
+      tags: [boards]
+      responses:
+        '200': { description: 'Labels', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Label' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createLabel
+      tags: [boards]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateLabel' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/Label' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /labels/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateLabel
+      tags: [boards]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateLabel' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/Label' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteLabel
+      tags: [boards]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/activity:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listBoardActivity
+      tags: [boards]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: 'Activity, newest first', content: { application/json: { schema: { $ref: '#/components/schemas/ActivityPage' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/events:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: boardEvents
+      tags: [boards]
+      description: |
+        Server-sent events for one board. Each event's `id` is the activity
+        ID and its data is an `Activity`. Send `Last-Event-ID` to replay
+        missed events. A `resync` event means the client should re-fetch
+        `/boards/{id}/full`.
+      responses:
+        '200': { description: 'Event stream', content: { text/event-stream: { schema: { type: string } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/lists:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: createList
+      tags: [lists]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateList' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/List' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /lists/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateList
+      tags: [lists]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateList' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/List' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /lists/{id}/move:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: moveList
+      tags: [lists]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MoveList' } } }
+      responses:
+        '200': { description: 'Moved', content: { application/json: { schema: { $ref: '#/components/schemas/List' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /lists/{id}/cards:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: createCard
+      tags: [cards]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateCard' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: getCard
+      tags: [cards]
+      responses:
+        '200': { description: 'Card with checklists, attachments and links', content: { application/json: { schema: { $ref: '#/components/schemas/CardDetail' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateCard
+      tags: [cards]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateCard' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteCard
+      tags: [cards]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/move:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: moveCard
+      tags: [cards]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/MoveCard' } } }
+      responses:
+        '200': { description: 'Moved', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/copy:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: copyCard
+      tags: [cards]
+      description: Copy a card, or create a card from a card template.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CopyCard' } } }
+      responses:
+        '201': { description: 'The new card', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/activity:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listCardActivity
+      tags: [cards]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: 'Activity, newest first', content: { application/json: { schema: { $ref: '#/components/schemas/ActivityPage' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/members:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: addCardMember
+      tags: [cards]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UserRefInput' } } }
+      responses:
+        '200': { description: 'Card', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/ID'
+      - $ref: '#/components/parameters/UserID'
+    delete:
+      operationId: removeCardMember
+      tags: [cards]
+      responses:
+        '200': { description: 'Card', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/labels:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: addCardLabel
+      tags: [cards]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/LabelRefInput' } } }
+      responses:
+        '200': { description: 'Card', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/labels/{labelId}:
+    parameters:
+      - $ref: '#/components/parameters/ID'
+      - { name: labelId, in: path, required: true, schema: { type: string } }
+    delete:
+      operationId: removeCardLabel
+      tags: [cards]
+      responses:
+        '200': { description: 'Card', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/watch:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: watchCard
+      tags: [cards]
+      responses:
+        '204': { description: 'Watching' }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: unwatchCard
+      tags: [cards]
+      responses:
+        '204': { description: 'Not watching' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/comments:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listComments
+      tags: [comments]
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: 'Comments, newest first', content: { application/json: { schema: { $ref: '#/components/schemas/CommentPage' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createComment
+      tags: [comments]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CommentInput' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/Comment' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /comments/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateComment
+      tags: [comments]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CommentInput' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/Comment' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/checklists:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: createChecklist
+      tags: [checklists]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateChecklist' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/Checklist' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /checklists/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateChecklist
+      tags: [checklists]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateChecklist' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/Checklist' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteChecklist
+      tags: [checklists]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /checklists/{id}/items:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: createChecklistItem
+      tags: [checklists]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateChecklistItem' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/ChecklistItem' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /checklist-items/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateChecklistItem
+      tags: [checklists]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateChecklistItem' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/ChecklistItem' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteChecklistItem
+      tags: [checklists]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/attachments:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: uploadAttachment
+      tags: [attachments]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '201': { description: 'Uploaded', content: { application/json: { schema: { $ref: '#/components/schemas/Attachment' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /attachments/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    delete:
+      operationId: deleteAttachment
+      tags: [attachments]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /attachments/{id}/download:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: downloadAttachment
+      tags: [attachments]
+      responses:
+        '200': { description: 'File contents', content: { application/octet-stream: { schema: { type: string, format: binary } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/links:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listCardLinks
+      tags: [links]
+      responses:
+        '200': { description: 'Links', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/CardLink' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createCardLink
+      tags: [links]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateCardLink' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/CardLink' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /cards/{id}/links/{kind}/{externalKey}:
+    parameters:
+      - $ref: '#/components/parameters/ID'
+      - { name: kind, in: path, required: true, schema: { $ref: '#/components/schemas/LinkKind' } }
+      - { name: externalKey, in: path, required: true, schema: { type: string } }
+    put:
+      operationId: putCardLink
+      tags: [links]
+      description: Create or update a link by its external key. The `kowhai hook` command uses this.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PutCardLink' } } }
+      responses:
+        '200': { description: 'Saved', content: { application/json: { schema: { $ref: '#/components/schemas/CardLink' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /links/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateCardLink
+      tags: [links]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PutCardLink' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/CardLink' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteCardLink
+      tags: [links]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/card-templates:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listCardTemplates
+      tags: [cards]
+      responses:
+        '200': { description: 'Template cards on this board', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Card' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /boards/{id}/recurrences:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: listRecurrences
+      tags: [recurrences]
+      responses:
+        '200': { description: 'Recurrences', content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Recurrence' } } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createRecurrence
+      tags: [recurrences]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateRecurrence' } } }
+      responses:
+        '201': { description: 'Created', content: { application/json: { schema: { $ref: '#/components/schemas/Recurrence' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /recurrences/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: getRecurrence
+      tags: [recurrences]
+      responses:
+        '200': { description: 'Recurrence', content: { application/json: { schema: { $ref: '#/components/schemas/Recurrence' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateRecurrence
+      tags: [recurrences]
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateRecurrence' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/Recurrence' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteRecurrence
+      tags: [recurrences]
+      responses:
+        '204': { description: 'Deleted' }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /recurrences/{id}/run:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    post:
+      operationId: runRecurrence
+      tags: [recurrences]
+      responses:
+        '201': { description: 'The new card', content: { application/json: { schema: { $ref: '#/components/schemas/Card' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /recurrences/{id}/preview:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    get:
+      operationId: previewRecurrence
+      tags: [recurrences]
+      parameters:
+        - { name: count, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 5 } }
+      responses:
+        '200': { description: 'Next run times', content: { application/json: { schema: { $ref: '#/components/schemas/RecurrencePreview' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /recurrences/preview:
+    post:
+      operationId: previewRule
+      tags: [recurrences]
+      description: Preview run times for a rule before saving it.
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PreviewRule' } } }
+      responses:
+        '200': { description: 'Next run times', content: { application/json: { schema: { $ref: '#/components/schemas/RecurrencePreview' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /search:
+    get:
+      operationId: search
+      tags: [search]
+      description: |
+        Full-text search over cards, comments and checklist items. Supports
+        `label:<name>`, `member:<name or email>`, `due:overdue` and
+        `is:archived` filters.
+      parameters:
+        - { name: q, in: query, required: true, schema: { type: string } }
+        - { name: workspace, in: query, schema: { type: string } }
+        - { name: board, in: query, schema: { type: string } }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: 'Results grouped by board', content: { application/json: { schema: { $ref: '#/components/schemas/SearchResults' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200': { description: 'Users', content: { application/json: { schema: { $ref: '#/components/schemas/UserPage' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+  /admin/users/{userId}:
+    parameters: [{ $ref: '#/components/parameters/UserID' }]
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminUpdateUser' } } }
+      responses:
+        '200': { description: 'Updated', content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
+        default: { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    cookieAuth: { type: apiKey, in: cookie, name: kowhai_session }
+    bearerAuth: { type: http, scheme: bearer }
+
+  parameters:
+    ID: { name: id, in: path, required: true, schema: { type: string } }
+    UserID: { name: userId, in: path, required: true, schema: { type: string } }
+    Cursor: { name: cursor, in: query, schema: { type: string } }
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200 } }
+    IfMatch: { name: If-Match, in: header, description: 'Resource version', schema: { type: string } }
+
+  responses:
+    Problem:
+      description: Error
+      content:
+        application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } }
+
+  schemas:
+    Problem:
+      type: object
+      required: [title, status]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+
+    UserRef:
+      type: object
+      required: [id, display_name, avatar_url]
+      properties:
+        id: { type: string }
+        display_name: { type: string }
+        avatar_url: { type: string }
+
+    User:
+      type: object
+      required: [id, email, display_name, avatar_url, is_admin, disabled, created_at]
+      properties:
+        id: { type: string }
+        email: { type: string }
+        display_name: { type: string }
+        avatar_url: { type: string }
+        is_admin: { type: boolean }
+        disabled: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    Me:
+      type: object
+      required: [user, unread_notifications]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        unread_notifications: { type: integer }
+        token: { $ref: '#/components/schemas/Token' }
+
+    UserPage:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/User' } }
+        next_cursor: { type: string }
+
+    AdminUpdateUser:
+      type: object
+      required: [disabled]
+      properties:
+        disabled: { type: boolean }
+
+    TokenScope: { type: string, enum: [read, write] }
+
+    Token:
+      type: object
+      required: [id, name, prefix, scopes, actor_label, revoked, created_at]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        prefix: { type: string }
+        scopes: { type: array, items: { $ref: '#/components/schemas/TokenScope' } }
+        workspace_id: { type: string }
+        board_id: { type: string }
+        actor_label: { type: string }
+        expires_at: { type: string, format: date-time }
+        last_used_at: { type: string, format: date-time }
+        revoked: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    CreatedToken:
+      allOf:
+        - $ref: '#/components/schemas/Token'
+        - type: object
+          required: [token]
+          properties:
+            token: { type: string }
+
+    CreateToken:
+      type: object
+      required: [name, scopes]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        scopes: { type: array, minItems: 1, items: { $ref: '#/components/schemas/TokenScope' } }
+        workspace_id: { type: string }
+        board_id: { type: string }
+        actor_label: { type: string, maxLength: 100 }
+        expires_at: { type: string, format: date-time }
+
+    WorkspaceRole: { type: string, enum: [owner, admin, member, viewer] }
+    InviteRole: { type: string, enum: [admin, member, viewer] }
+    BoardRole: { type: string, enum: [admin, editor, viewer] }
+
+    Workspace:
+      type: object
+      required: [id, name, slug, description, role, created_at, updated_at, version]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        description: { type: string }
+        role: { $ref: '#/components/schemas/WorkspaceRole' }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+
+    WorkspacePage:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Workspace' } }
+        next_cursor: { type: string }
+
+    CreateWorkspace:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        description: { type: string, maxLength: 2000 }
+
+    UpdateWorkspace:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        description: { type: string, maxLength: 2000 }
+
+    WorkspaceMember:
+      type: object
+      required: [user, role, joined_at]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        role: { $ref: '#/components/schemas/WorkspaceRole' }
+        joined_at: { type: string, format: date-time }
+
+    AddWorkspaceMember:
+      type: object
+      required: [user_id, role]
+      properties:
+        user_id: { type: string }
+        role: { $ref: '#/components/schemas/WorkspaceRole' }
+
+    UpdateWorkspaceMember:
+      type: object
+      required: [role]
+      properties:
+        role: { $ref: '#/components/schemas/WorkspaceRole' }
+
+    WorkspaceInvite:
+      type: object
+      required: [id, email, role, expires_at, created_at]
+      properties:
+        id: { type: string }
+        email: { type: string }
+        role: { $ref: '#/components/schemas/InviteRole' }
+        expires_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+
+    CreateInvite:
+      type: object
+      required: [email, role]
+      properties:
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/InviteRole' }
+
+    InviteResult:
+      type: object
+      properties:
+        invite: { $ref: '#/components/schemas/WorkspaceInvite' }
+        member: { $ref: '#/components/schemas/WorkspaceMember' }
+
+    LinkStatus: { type: string, enum: [working, waiting, idle, ended, stale] }
+
+    BoardSettings:
+      type: object
+      properties:
+        status_lists_enabled:
+          type: boolean
+          description: Move cards to a list when their Claude Code status changes.
+        status_lists:
+          type: object
+          description: Maps a link status to a list ID.
+          additionalProperties: { type: string }
+
+    Board:
+      type: object
+      required: [id, workspace_id, name, description, visibility, background, is_template, archived, settings, role, created_at, updated_at, version]
+      properties:
+        id: { type: string }
+        workspace_id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        visibility: { type: string, enum: [private, workspace] }
+        background: { type: string }
+        is_template: { type: boolean }
+        archived: { type: boolean }
+        settings: { $ref: '#/components/schemas/BoardSettings' }
+        role:
+          allOf: [{ $ref: '#/components/schemas/BoardRole' }]
+          description: The caller's effective role on this board.
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+
+    CreateBoard:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, maxLength: 5000 }
+        visibility: { type: string, enum: [private, workspace] }
+        background: { type: string, maxLength: 100 }
+        is_template: { type: boolean }
+
+    UpdateBoard:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: string, maxLength: 5000 }
+        visibility: { type: string, enum: [private, workspace] }
+        background: { type: string, maxLength: 100 }
+        is_template: { type: boolean }
+        archived: { type: boolean }
+        settings: { $ref: '#/components/schemas/BoardSettings' }
+
+    CopyBoard:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        workspace_id: { type: string, description: 'Defaults to the source board''s workspace.' }
+        include_cards: { type: boolean }
+        as_template: { type: boolean }
+        visibility: { type: string, enum: [private, workspace] }
+
+    BuiltinTemplate:
+      type: object
+      required: [key, name, description]
+      properties:
+        key: { type: string }
+        name: { type: string }
+        description: { type: string }
+        board_id: { type: string, description: 'Set when the template is already in this workspace.' }
+
+    SeedTemplate:
+      type: object
+      required: [key]
+      properties:
+        key: { type: string }
+
+    BoardMember:
+      type: object
+      required: [user, role, joined_at]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        role: { $ref: '#/components/schemas/BoardRole' }
+        joined_at: { type: string, format: date-time }
+
+    AddBoardMember:
+      type: object
+      required: [user_id, role]
+      properties:
+        user_id: { type: string }
+        role: { $ref: '#/components/schemas/BoardRole' }
+
+    UpdateBoardMember:
+      type: object
+      required: [role]
+      properties:
+        role: { $ref: '#/components/schemas/BoardRole' }
+
+    BoardFull:
+      type: object
+      required: [board, lists, cards, labels, users, links]
+      properties:
+        board: { $ref: '#/components/schemas/Board' }
+        lists: { type: array, items: { $ref: '#/components/schemas/List' } }
+        cards: { type: array, items: { $ref: '#/components/schemas/Card' } }
+        labels: { type: array, items: { $ref: '#/components/schemas/Label' } }
+        users:
+          type: array
+          description: Everyone who can see the board, for member pickers and avatars.
+          items: { $ref: '#/components/schemas/UserRef' }
+        links: { type: array, items: { $ref: '#/components/schemas/CardLink' } }
+        last_event_id: { type: string, description: 'Pass as Last-Event-ID when opening the event stream.' }
+
+    Label:
+      type: object
+      required: [id, board_id, name, colour, version]
+      properties:
+        id: { type: string }
+        board_id: { type: string }
+        name: { type: string }
+        colour: { type: string }
+        version: { type: integer, format: int64 }
+
+    CreateLabel:
+      type: object
+      required: [colour]
+      properties:
+        name: { type: string, maxLength: 100 }
+        colour: { type: string, maxLength: 20 }
+
+    UpdateLabel:
+      type: object
+      properties:
+        name: { type: string, maxLength: 100 }
+        colour: { type: string, maxLength: 20 }
+
+    List:
+      type: object
+      required: [id, board_id, name, position, archived, created_at, updated_at, version]
+      properties:
+        id: { type: string }
+        board_id: { type: string }
+        name: { type: string }
+        position: { type: string }
+        archived: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+
+    Placement:
+      type: object
+      description: |
+        Where to put an item. Send the ID of the item that should come
+        before it, after it, or both. Send neither to add at the end.
+      properties:
+        after_id: { type: string, description: 'The item that will sit before this one.' }
+        before_id: { type: string, description: 'The item that will sit after this one.' }
+
+    CreateList:
+      allOf:
+        - $ref: '#/components/schemas/Placement'
+        - type: object
+          required: [name]
+          properties:
+            name: { type: string, minLength: 1, maxLength: 200 }
+
+    UpdateList:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        archived: { type: boolean }
+
+    MoveList:
+      $ref: '#/components/schemas/Placement'
+
+    CardCounts:
+      type: object
+      required: [checklist_items, checklist_done, comments, attachments]
+      properties:
+        checklist_items: { type: integer }
+        checklist_done: { type: integer }
+        comments: { type: integer }
+        attachments: { type: integer }
+
+    Card:
+      type: object
+      required: [id, list_id, board_id, title, description, position, due_done, is_template, archived, label_ids, member_ids, counts, created_by, created_at, updated_at, version]
+      properties:
+        id: { type: string }
+        list_id: { type: string }
+        board_id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        position: { type: string }
+        due_at: { type: string, format: date-time }
+        due_done: { type: boolean }
+        start_at: { type: string, format: date-time }
+        cover_attachment_id: { type: string }
+        is_template: { type: boolean }
+        recurrence_id: { type: string }
+        archived: { type: boolean }
+        label_ids: { type: array, items: { type: string } }
+        member_ids: { type: array, items: { type: string } }
+        counts: { $ref: '#/components/schemas/CardCounts' }
+        created_by: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+
+    CardDetail:
+      allOf:
+        - $ref: '#/components/schemas/Card'
+        - type: object
+          required: [checklists, attachments, links, watching]
+          properties:
+            checklists: { type: array, items: { $ref: '#/components/schemas/Checklist' } }
+            attachments: { type: array, items: { $ref: '#/components/schemas/Attachment' } }
+            links: { type: array, items: { $ref: '#/components/schemas/CardLink' } }
+            watching: { type: boolean }
+
+    CreateCard:
+      allOf:
+        - $ref: '#/components/schemas/Placement'
+        - type: object
+          required: [title]
+          properties:
+            title: { type: string, minLength: 1, maxLength: 500 }
+            description: { type: string, maxLength: 50000 }
+            due_at: { type: string, format: date-time }
+            start_at: { type: string, format: date-time }
+            is_template: { type: boolean }
+            label_ids: { type: array, items: { type: string } }
+            member_ids: { type: array, items: { type: string } }
+
+    UpdateCard:
+      type: object
+      properties:
+        title: { type: string, minLength: 1, maxLength: 500 }
+        description: { type: string, maxLength: 50000 }
+        due_at: { type: string, format: date-time, nullable: true }
+        due_done: { type: boolean }
+        start_at: { type: string, format: date-time, nullable: true }
+        cover_attachment_id: { type: string, nullable: true }
+        is_template: { type: boolean }
+        archived: { type: boolean }
+
+    MoveCard:
+      allOf:
+        - $ref: '#/components/schemas/Placement'
+        - type: object
+          required: [list_id]
+          properties:
+            list_id: { type: string }
+
+    CopyCard:
+      allOf:
+        - $ref: '#/components/schemas/Placement'
+        - type: object
+          required: [list_id]
+          properties:
+            list_id: { type: string }
+            title: { type: string, maxLength: 500 }
+            include_members: { type: boolean }
+            as_template: { type: boolean }
+
+    UserRefInput:
+      type: object
+      required: [user_id]
+      properties:
+        user_id: { type: string }
+
+    LabelRefInput:
+      type: object
+      required: [label_id]
+      properties:
+        label_id: { type: string }
+
+    Checklist:
+      type: object
+      required: [id, card_id, title, position, items, version]
+      properties:
+        id: { type: string }
+        card_id: { type: string }
+        title: { type: string }
+        position: { type: string }
+        items: { type: array, items: { $ref: '#/components/schemas/ChecklistItem' } }
+        version: { type: integer, format: int64 }
+
+    CreateChecklist:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+
+    UpdateChecklist:
+      allOf:
+        - $ref: '#/components/schemas/Placement'
+        - type: object
+          properties:
+            title: { type: string, minLength: 1, maxLength: 200 }
+
+    ChecklistItem:
+      type: object
+      required: [id, checklist_id, card_id, text, done, position, version]
+      properties:
+        id: { type: string }
+        checklist_id: { type: string }
+        card_id: { type: string }
+        text: { type: string }
+        done: { type: boolean }
+        position: { type: string }
+        assignee_id: { type: string }
+        due_at: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+
+    CreateChecklistItem:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 1000 }
+        done: { type: boolean }
+        assignee_id: { type: string }
+        due_at: { type: string, format: date-time }
+
+    UpdateChecklistItem:
+      allOf:
+        - $ref: '#/components/schemas/Placement'
+        - type: object
+          properties:
+            text: { type: string, minLength: 1, maxLength: 1000 }
+            done: { type: boolean }
+            assignee_id: { type: string, nullable: true }
+            due_at: { type: string, format: date-time, nullable: true }
+            checklist_id: { type: string, description: 'Move the item to another checklist on the same card.' }
+
+    Comment:
+      type: object
+      required: [id, card_id, author, actor_label, body, created_at, version]
+      properties:
+        id: { type: string }
+        card_id: { type: string }
+        author: { $ref: '#/components/schemas/UserRef' }
+        actor_label: { type: string }
+        body: { type: string }
+        edited_at: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+
+    CommentPage:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Comment' } }
+        next_cursor: { type: string }
+
+    CommentInput:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 20000 }
+
+    Attachment:
+      type: object
+      required: [id, card_id, filename, content_type, size_bytes, uploader_id, created_at, url]
+      properties:
+        id: { type: string }
+        card_id: { type: string }
+        filename: { type: string }
+        content_type: { type: string }
+        size_bytes: { type: integer, format: int64 }
+        uploader_id: { type: string }
+        created_at: { type: string, format: date-time }
+        url: { type: string }
+
+    LinkKind: { type: string, enum: [claude_code, url] }
+
+    CardLink:
+      type: object
+      required: [id, card_id, board_id, kind, external_key, title, repo, branch, host, status_detail, meta, created_at, updated_at, version]
+      properties:
+        id: { type: string }
+        card_id: { type: string }
+        board_id: { type: string }
+        kind: { $ref: '#/components/schemas/LinkKind' }
+        external_key: { type: string }
+        title: { type: string }
+        repo: { type: string }
+        branch: { type: string }
+        host: { type: string }
+        status: { $ref: '#/components/schemas/LinkStatus' }
+        status_detail: { type: string }
+        last_seen_at: { type: string, format: date-time }
+        meta: { type: object, additionalProperties: true }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        version: { type: integer, format: int64 }
+
+    CreateCardLink:
+      type: object
+      required: [kind, external_key]
+      properties:
+        kind: { $ref: '#/components/schemas/LinkKind' }
+        external_key: { type: string, minLength: 1, maxLength: 2000 }
+        title: { type: string, maxLength: 500 }
+
+    PutCardLink:
+      type: object
+      properties:
+        title: { type: string, maxLength: 500 }
+        repo: { type: string, maxLength: 500 }
+        branch: { type: string, maxLength: 500 }
+        host: { type: string, maxLength: 255 }
+        status: { $ref: '#/components/schemas/LinkStatus' }
+        status_detail: { type: string, maxLength: 2000 }
+        meta: { type: object, additionalProperties: true }
+
+    Recurrence:
+      type: object
+      required: [id, board_id, target_list_id, rrule, dtstart, timezone, paused, created_by, version]
+      properties:
+        id: { type: string }
+        board_id: { type: string }
+        template_card_id: { type: string }
+        target_list_id: { type: string }
+        rrule: { type: string, example: 'FREQ=WEEKLY;BYDAY=MO,WE' }
+        dtstart: { type: string, description: 'Local start time in the recurrence''s time zone', example: '2026-11-16T09:00:00' }
+        timezone: { type: string, example: Australia/Sydney }
+        due_offset_minutes: { type: integer }
+        next_run_at: { type: string, format: date-time }
+        last_run_at: { type: string, format: date-time }
+        paused: { type: boolean }
+        created_by: { type: string }
+        version: { type: integer, format: int64 }
+
+    CreateRecurrence:
+      type: object
+      required: [template_card_id, target_list_id, rrule, dtstart, timezone]
+      properties:
+        template_card_id: { type: string }
+        target_list_id: { type: string }
+        rrule: { type: string, maxLength: 500 }
+        dtstart: { type: string }
+        timezone: { type: string }
+        due_offset_minutes: { type: integer }
+
+    UpdateRecurrence:
+      type: object
+      properties:
+        template_card_id: { type: string }
+        target_list_id: { type: string }
+        rrule: { type: string, maxLength: 500 }
+        dtstart: { type: string }
+        timezone: { type: string }
+        due_offset_minutes: { type: integer, nullable: true }
+        paused: { type: boolean }
+
+    PreviewRule:
+      type: object
+      required: [rrule, dtstart, timezone]
+      properties:
+        rrule: { type: string, maxLength: 500 }
+        dtstart: { type: string }
+        timezone: { type: string }
+        count: { type: integer, minimum: 1, maximum: 50 }
+
+    RecurrencePreview:
+      type: object
+      required: [times]
+      properties:
+        times: { type: array, items: { type: string, format: date-time } }
+
+    Activity:
+      type: object
+      required: [id, workspace_id, type, actor_label, payload, created_at]
+      properties:
+        id: { type: string }
+        workspace_id: { type: string }
+        board_id: { type: string }
+        card_id: { type: string }
+        actor: { $ref: '#/components/schemas/UserRef' }
+        actor_label: { type: string, description: 'Set when the change came from a labelled token, such as Claude.' }
+        type: { type: string, example: card.moved }
+        payload:
+          type: object
+          additionalProperties: true
+          description: Type-specific details. `entity` holds the changed object for client patching.
+        created_at: { type: string, format: date-time }
+
+    ActivityPage:
+      type: object
+      required: [items]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Activity' } }
+        next_cursor: { type: string }
+
+    Notification:
+      type: object
+      required: [id, read, created_at, activity]
+      properties:
+        id: { type: string }
+        read: { type: boolean }
+        created_at: { type: string, format: date-time }
+        activity: { $ref: '#/components/schemas/Activity' }
+
+    NotificationPage:
+      type: object
+      required: [items, unread]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+        unread: { type: integer }
+        next_cursor: { type: string }
+
+    UpdateNotification:
+      type: object
+      required: [read]
+      properties:
+        read: { type: boolean }
+
+    NotificationPrefs:
+      type: object
+      description: Turn each in-app notification trigger on or off. Missing keys are on.
+      properties:
+        card_member: { type: boolean }
+        mention: { type: boolean }
+        comment: { type: boolean }
+        due: { type: boolean }
+        invite: { type: boolean }
+        recurrence_paused: { type: boolean }
+        session_waiting: { type: boolean }
+
+    SearchHit:
+      type: object
+      required: [card_id, card_title, list_id, entity_type, snippet, archived]
+      properties:
+        card_id: { type: string }
+        card_title: { type: string }
+        list_id: { type: string }
+        entity_type: { type: string, enum: [card, comment, checklist_item] }
+        snippet: { type: string, description: 'Matched text. Matches are wrapped in [[ and ]].' }
+        archived: { type: boolean }
+
+    SearchGroup:
+      type: object
+      required: [board_id, board_name, workspace_id, hits]
+      properties:
+        board_id: { type: string }
+        board_name: { type: string }
+        workspace_id: { type: string }
+        hits: { type: array, items: { $ref: '#/components/schemas/SearchHit' } }
+
+    SearchResults:
+      type: object
+      required: [groups]
+      properties:
+        groups: { type: array, items: { $ref: '#/components/schemas/SearchGroup' } }
+        next_cursor: { type: string }

@@ -1,0 +1,103 @@
+# Kōwhai with Garage for attachments and backups.
+#
+#   cp .env.example .env    # then fill in the values
+#   docker compose up -d
+#
+# For local development with a bundled Authelia sign-in provider:
+#   cp .env.dev.example .env && docker compose --profile dev up -d
+#
+# TLS is left to your reverse proxy. Point it at port 8080.
+
+name: kowhai
+
+services:
+  kowhai:
+    build:
+      context: ..
+      args:
+        VERSION: ${KOWHAI_VERSION:-dev}
+    image: kowhai:${KOWHAI_VERSION:-dev}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      KOWHAI_S3_ENDPOINT: http://garage:3900
+      KOWHAI_S3_REGION: garage
+      KOWHAI_LITESTREAM: "1"
+    ports:
+      - "${KOWHAI_PORT:-8080}:8080"
+    volumes:
+      - kowhai-data:/data
+      - ./certs:/certs:ro
+    depends_on:
+      garage-init:
+        condition: service_completed_successfully
+
+  garage:
+    image: dxflrs/garage:v2.5.0
+    restart: unless-stopped
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:?set GARAGE_RPC_SECRET in .env}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:?set GARAGE_ADMIN_TOKEN in .env}
+    volumes:
+      - ./garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+
+  garage-init:
+    image: alpine:3.22
+    entrypoint: ["/bin/sh", "/garage-init.sh"]
+    environment:
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN}
+      KOWHAI_S3_ACCESS_KEY: ${KOWHAI_S3_ACCESS_KEY:?set KOWHAI_S3_ACCESS_KEY in .env}
+      KOWHAI_S3_SECRET_KEY: ${KOWHAI_S3_SECRET_KEY:?set KOWHAI_S3_SECRET_KEY in .env}
+      KOWHAI_S3_BUCKET: ${KOWHAI_S3_BUCKET:-kowhai-attachments}
+      KOWHAI_S3_BACKUP_BUCKET: ${KOWHAI_S3_BACKUP_BUCKET:-kowhai-backups}
+    volumes:
+      - ./garage-init.sh:/garage-init.sh:ro
+    depends_on:
+      - garage
+
+  # ---- Development only ----
+
+  # Makes a self-signed certificate for Authelia, which only serves HTTPS.
+  dev-certs:
+    profiles: [dev]
+    image: alpine:3.22
+    command:
+      - /bin/sh
+      - -c
+      - |
+        [ -f /certs/auth.crt ] && exit 0
+        apk add --no-cache openssl >/dev/null
+        openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj /CN=auth.localhost \
+          -addext "subjectAltName=DNS:auth.localhost,DNS:authelia,DNS:localhost" -keyout /certs/auth.key -out /certs/auth.crt
+        openssl genrsa -out /certs/oidc.key 2048
+        chmod 644 /certs/*
+    volumes:
+      - ./certs:/certs
+
+  authelia:
+    profiles: [dev]
+    image: authelia/authelia:4.39
+    restart: unless-stopped
+    environment:
+      X_AUTHELIA_CONFIG_FILTERS: template
+      KOWHAI_BASE_URL: ${KOWHAI_BASE_URL}
+    ports:
+      - "9091:9091"
+    # The browser reaches Authelia as auth.localhost through the published
+    # port. Inside the network, kowhai uses the same name through this alias.
+    networks:
+      default:
+        aliases: [auth.localhost]
+    volumes:
+      - ./authelia:/config:ro
+      - ./certs:/certs:ro
+    depends_on:
+      dev-certs:
+        condition: service_completed_successfully
+
+volumes:
+  kowhai-data:
+  garage-meta:
+  garage-data:

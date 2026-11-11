@@ -1,0 +1,15 @@
+# Server code. Models live in internal/apitypes (see models.yaml) so the
+# service layer can use them without an import cycle.
+package: api
+output: internal/api/api.gen.go
+generate:
+  std-http-server: true
+  strict-server: true
+  embedded-spec: true
+additional-imports:
+  - package: kowhai/internal/apitypes
+    alias: .
+output-options:
+  nullable-type: true
+  # Streaming endpoints are written by hand in internal/api/stream.go.
+  exclude-operation-ids: [boardEvents, userEvents, uploadAttachment, downloadAttachment]

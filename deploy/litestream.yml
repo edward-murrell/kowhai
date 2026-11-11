@@ -1,0 +1,12 @@
+# Litestream replicates the SQLite file to the Garage backups bucket.
+dbs:
+  - path: ${KOWHAI_DB_PATH}
+    replica:
+      type: s3
+      bucket: ${KOWHAI_S3_BACKUP_BUCKET}
+      path: litestream/kowhai.db
+      endpoint: ${KOWHAI_S3_ENDPOINT}
+      region: ${KOWHAI_S3_REGION}
+      force-path-style: true
+      access-key-id: ${KOWHAI_S3_ACCESS_KEY}
+      secret-access-key: ${KOWHAI_S3_SECRET_KEY}

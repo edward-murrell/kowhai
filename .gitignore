@@ -1,0 +1,13 @@
+/bin/
+/data/
+*.db
+*.db-wal
+*.db-shm
+node_modules/
+web/dist/*
+!web/dist/.keep
+web/test-results/
+web/playwright-report/
+.kowhai
+coverage.out
+deploy/.env

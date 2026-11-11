@@ -12,7 +12,7 @@ jobs:
   go:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -31,7 +31,7 @@ jobs:
   web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [go, web]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [go, web]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: cp deploy/.env.dev.example deploy/.env
       - run: docker compose -f deploy/compose.yaml --profile dev up -d --build
       - name: Wait for kowhai
@@ -90,5 +90,5 @@ jobs:
     runs-on: ubuntu-latest
     needs: [go]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: deploy/test/kanidm.sh

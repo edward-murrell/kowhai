@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"kowhai/web"
+	"github.com/edward-murrell/kowhai/web"
 )
 
 // spaHandler serves the embedded Vue app. Unknown paths get index.html so

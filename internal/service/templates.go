@@ -5,11 +5,11 @@ import (
 	"strings"
 	"time"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/position"
-	"kowhai/internal/search"
-	"kowhai/internal/store"
-	tmpl "kowhai/internal/template"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/position"
+	"github.com/edward-murrell/kowhai/internal/search"
+	"github.com/edward-murrell/kowhai/internal/store"
+	tmpl "github.com/edward-murrell/kowhai/internal/template"
 )
 
 // ---- Board copies and templates ----

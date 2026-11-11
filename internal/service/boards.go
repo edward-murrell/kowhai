@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/position"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/position"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 var defaultLabelColours = []string{"green", "yellow", "orange", "red", "purple", "blue"}

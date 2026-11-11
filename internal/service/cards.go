@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/search"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/search"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 func cardSiblings(ctx context.Context, q *store.Queries, listID string) ([]sibling, error) {

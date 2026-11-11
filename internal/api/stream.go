@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"kowhai/internal/events"
-	"kowhai/internal/service"
+	"github.com/edward-murrell/kowhai/internal/events"
+	"github.com/edward-murrell/kowhai/internal/service"
 )
 
 // Streams serves the endpoints that the generated code does not: SSE,

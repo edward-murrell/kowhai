@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"strings"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 func listSiblings(ctx context.Context, q *store.Queries, boardID string) ([]sibling, error) {

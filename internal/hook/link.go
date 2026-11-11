@@ -16,7 +16,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	. "kowhai/internal/apitypes"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
 )
 
 // Link runs `kowhai link`. It picks or creates a card and writes .kowhai

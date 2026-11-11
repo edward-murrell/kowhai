@@ -15,15 +15,15 @@ import (
 	"syscall"
 	"time"
 
-	"kowhai/internal/auth"
-	"kowhai/internal/auth/oidctest"
-	"kowhai/internal/blob"
-	"kowhai/internal/config"
-	"kowhai/internal/events"
-	"kowhai/internal/server"
-	"kowhai/internal/service"
-	"kowhai/internal/store"
-	"kowhai/internal/worker"
+	"github.com/edward-murrell/kowhai/internal/auth"
+	"github.com/edward-murrell/kowhai/internal/auth/oidctest"
+	"github.com/edward-murrell/kowhai/internal/blob"
+	"github.com/edward-murrell/kowhai/internal/config"
+	"github.com/edward-murrell/kowhai/internal/events"
+	"github.com/edward-murrell/kowhai/internal/server"
+	"github.com/edward-murrell/kowhai/internal/service"
+	"github.com/edward-murrell/kowhai/internal/store"
+	"github.com/edward-murrell/kowhai/internal/worker"
 )
 
 func newLogger(level string) *slog.Logger {
@@ -163,4 +163,3 @@ func (t localTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	t.h.ServeHTTP(rec, r)
 	return rec.result(r), nil
 }
-

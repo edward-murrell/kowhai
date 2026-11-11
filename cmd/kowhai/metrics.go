@@ -8,7 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"kowhai/internal/events"
+	"github.com/edward-murrell/kowhai/internal/events"
 )
 
 // serveMetrics serves /metrics on its own port, away from the public one.

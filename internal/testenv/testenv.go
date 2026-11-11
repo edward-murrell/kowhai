@@ -25,14 +25,14 @@ import (
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/legacy"
 
-	apispec "kowhai/api"
-	"kowhai/internal/auth"
-	"kowhai/internal/auth/oidctest"
-	"kowhai/internal/blob"
-	"kowhai/internal/events"
-	"kowhai/internal/server"
-	"kowhai/internal/service"
-	"kowhai/internal/store"
+	apispec "github.com/edward-murrell/kowhai/api"
+	"github.com/edward-murrell/kowhai/internal/auth"
+	"github.com/edward-murrell/kowhai/internal/auth/oidctest"
+	"github.com/edward-murrell/kowhai/internal/blob"
+	"github.com/edward-murrell/kowhai/internal/events"
+	"github.com/edward-murrell/kowhai/internal/server"
+	"github.com/edward-murrell/kowhai/internal/service"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 // Users the dev provider knows. Alice is a site admin.
@@ -248,7 +248,7 @@ func (e *Env) validate(next http.Handler) http.Handler {
 		}
 		out := &openapi3filter.ResponseValidationInput{
 			RequestValidationInput: in, Status: c.status, Header: w.Header(),
-			Body: io.NopCloser(bytes.NewReader(c.body.Bytes())),
+			Body:    io.NopCloser(bytes.NewReader(c.body.Bytes())),
 			Options: &openapi3filter.Options{IncludeResponseStatus: true},
 		}
 		if err := openapi3filter.ValidateResponse(r.Context(), out); err != nil {

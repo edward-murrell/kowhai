@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"kowhai/internal/service"
+	"github.com/edward-murrell/kowhai/internal/service"
 )
 
 // Job is one scheduled task.

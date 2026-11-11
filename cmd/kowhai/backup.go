@@ -12,9 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
-	"kowhai/internal/blob"
-	"kowhai/internal/config"
-	"kowhai/internal/store"
+	"github.com/edward-murrell/kowhai/internal/blob"
+	"github.com/edward-murrell/kowhai/internal/config"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 const keepSnapshots = 7

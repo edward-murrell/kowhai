@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"kowhai/internal/api"
-	"kowhai/internal/auth"
-	"kowhai/internal/events"
-	"kowhai/internal/mcp"
-	"kowhai/internal/service"
+	"github.com/edward-murrell/kowhai/internal/api"
+	"github.com/edward-murrell/kowhai/internal/auth"
+	"github.com/edward-murrell/kowhai/internal/events"
+	"github.com/edward-murrell/kowhai/internal/mcp"
+	"github.com/edward-murrell/kowhai/internal/service"
 )
 
 // Pinger is something /readyz checks.

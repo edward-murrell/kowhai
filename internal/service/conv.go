@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"strings"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 // Conversions from store rows to API models.

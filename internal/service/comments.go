@@ -6,9 +6,9 @@ import (
 	"slices"
 	"strings"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/search"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/search"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 func (s *Service) ListComments(ctx context.Context, cardID string, cursor *string, limit *int) (CommentPage, error) {

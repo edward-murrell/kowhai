@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 var slugStrip = regexp.MustCompile(`[^a-z0-9]+`)

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	. "kowhai/internal/apitypes"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
 )
 
 // Timeout bounds the whole hook run. It must never slow Claude down.

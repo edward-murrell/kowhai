@@ -1,0 +1,12 @@
+# Development users. The password for each is "kowhai".
+users:
+  alice:
+    displayname: Alice Admin
+    email: alice@example.com
+    password: '$argon2id$v=19$m=65536,t=3,p=4$NBH8S0C+hkksBsS+KbYsuQ$qMnb6VV3yC3U1ZcBmT+o80NATe8wdpt5yi8wnWkepfk'
+    groups: [admins]
+  bob:
+    displayname: Bob Builder
+    email: bob@example.com
+    password: '$argon2id$v=19$m=65536,t=3,p=4$NBH8S0C+hkksBsS+KbYsuQ$qMnb6VV3yC3U1ZcBmT+o80NATe8wdpt5yi8wnWkepfk'
+    groups: []

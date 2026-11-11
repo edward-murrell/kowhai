@@ -1,0 +1,68 @@
+# Authelia for local development only. Users are in users.yml. The
+# password for every user is "kowhai". Secrets here are not secret.
+server:
+  address: tcp://:9091
+  tls:
+    key: /certs/auth.key
+    certificate: /certs/auth.crt
+
+log:
+  level: info
+
+theme: auto
+
+identity_validation:
+  reset_password:
+    jwt_secret: dev-only-jwt-secret-dev-only-jwt-secret-0000
+
+authentication_backend:
+  file:
+    path: /config/users.yml
+    watch: false
+
+access_control:
+  default_policy: one_factor
+
+session:
+  secret: dev-only-session-secret-dev-only-session-0000
+  cookies:
+    - domain: auth.localhost
+      authelia_url: https://auth.localhost:9091
+
+storage:
+  encryption_key: dev-only-storage-key-dev-only-storage-key-0000
+  local:
+    path: /tmp/authelia.sqlite3
+
+notifier:
+  filesystem:
+    filename: /tmp/notification.txt
+
+identity_providers:
+  oidc:
+    hmac_secret: dev-only-hmac-secret-dev-only-hmac-secret-0000
+    jwks:
+      - key_id: dev
+        algorithm: RS256
+        use: sig
+        key: {{ secret "/certs/oidc.key" | mindent 10 "|" | msquote }}
+    claims_policies:
+      kowhai:
+        id_token: [email, email_verified, name, preferred_username, groups]
+    clients:
+      - client_id: kowhai
+        client_name: Kōwhai
+        # The hash of "kowhai-dev-secret".
+        client_secret: '$pbkdf2-sha512$310000$UvaTJzbc.fCsStOgulxOUg$e/m2aSht4P5kgypn.Kv53gv/yJtvce1URTg9pP57mgDpBy3OcKT29elaHa7BiyS5uaWYW5lQzNySsQF8s8gXWw'
+        public: false
+        authorization_policy: one_factor
+        consent_mode: implicit
+        require_pkce: true
+        pkce_challenge_method: S256
+        claims_policy: kowhai
+        redirect_uris:
+          - '{{ env "KOWHAI_BASE_URL" }}/auth/callback'
+        scopes: [openid, profile, email, groups]
+        grant_types: [authorization_code]
+        response_types: [code]
+        token_endpoint_auth_method: client_secret_basic

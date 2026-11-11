@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@theme {
+  --color-kowhai-50: #fff9e6;
+  --color-kowhai-100: #ffefbf;
+  --color-kowhai-300: #ffd75a;
+  --color-kowhai-400: #f5b700;
+  --color-kowhai-500: #d99c00;
+  --color-kowhai-600: #a87700;
+  --color-bush-700: #2f5d3a;
+  --color-bush-800: #1f3b27;
+  --color-bush-900: #142619;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+html, body, #app { height: 100%; }
+body { @apply bg-stone-100 text-stone-900 antialiased; }
+
+@utility btn { @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50; }
+@utility btn-primary { @apply btn bg-bush-800 text-white hover:bg-bush-700; }
+@utility btn-accent { @apply btn bg-kowhai-400 text-bush-900 hover:bg-kowhai-300; }
+@utility btn-ghost { @apply btn text-stone-700 hover:bg-stone-200; }
+@utility btn-danger { @apply btn bg-red-600 text-white hover:bg-red-500; }
+@utility input { @apply w-full rounded-md border border-stone-300 bg-white px-2.5 py-1.5 text-sm shadow-sm outline-none focus:border-bush-700 focus:ring-2 focus:ring-bush-700/20; }
+@utility label-text { @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-stone-500; }
+@utility card-surface { @apply rounded-lg bg-white shadow-sm ring-1 ring-stone-900/5; }
+@utility menu { @apply z-50 min-w-48 rounded-lg bg-white p-1 shadow-lg ring-1 ring-stone-900/10; }
+@utility menu-item { @apply flex cursor-pointer select-none items-center gap-2 rounded px-2.5 py-1.5 text-sm text-stone-800 outline-none data-[highlighted]:bg-stone-100; }
+
+.prose-kowhai { @apply text-sm leading-relaxed text-stone-800; }
+.prose-kowhai p { @apply my-2; }
+.prose-kowhai a { @apply text-bush-700 underline; }
+.prose-kowhai ul { @apply my-2 list-disc pl-5; }
+.prose-kowhai ol { @apply my-2 list-decimal pl-5; }
+.prose-kowhai h1 { @apply mt-3 mb-1 text-lg font-bold; }
+.prose-kowhai h2 { @apply mt-3 mb-1 text-base font-bold; }
+.prose-kowhai h3 { @apply mt-2 mb-1 font-semibold; }
+.prose-kowhai code { @apply rounded bg-stone-100 px-1 py-0.5 font-mono text-[0.85em]; }
+.prose-kowhai pre { @apply my-2 overflow-x-auto rounded bg-stone-900 p-3 text-stone-100; }
+.prose-kowhai pre code { @apply bg-transparent p-0; }
+.prose-kowhai blockquote { @apply border-l-4 border-stone-300 pl-3 text-stone-600; }
+.prose-kowhai .mention { @apply rounded bg-kowhai-100 px-1 font-medium text-kowhai-600; }
+
+.sortable-ghost { @apply opacity-40; }
+.sortable-drag { @apply rotate-2; }

@@ -1,4 +1,4 @@
-module kowhai
+module github.com/edward-murrell/kowhai
 
 go 1.26.0
 

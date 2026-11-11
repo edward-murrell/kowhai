@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"strings"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/search"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/search"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 func (s *Service) checklistEvent(ctx context.Context, tx *store.Tx, a *Actor, b store.Board, cardID, typ string, payload map[string]any) error {

@@ -35,4 +35,3 @@ func metricsMiddleware(next http.Handler) http.Handler {
 		httpDuration.WithLabelValues(r.Method, route).Observe(time.Since(start).Seconds())
 	})
 }
-

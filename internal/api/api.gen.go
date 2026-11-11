@@ -17,8 +17,7 @@ import (
 	"path"
 	"strings"
 
-	. "kowhai/internal/apitypes"
-
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/oapi-codegen/runtime"
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"

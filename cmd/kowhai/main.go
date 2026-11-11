@@ -12,7 +12,7 @@ import (
 	// Recurring cards need zone data even on images without tzdata.
 	_ "time/tzdata"
 
-	"kowhai/internal/hook"
+	"github.com/edward-murrell/kowhai/internal/hook"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".

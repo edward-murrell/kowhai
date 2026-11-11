@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"kowhai/internal/service"
+	"github.com/edward-murrell/kowhai/internal/service"
 )
 
 // RateLimiter limits requests per token, per user or per client IP.

@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"kowhai/internal/position"
-	"kowhai/internal/store"
+	"github.com/edward-murrell/kowhai/internal/position"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 // Jobs the worker runs on a schedule.

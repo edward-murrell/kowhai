@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/events"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/events"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 // StaleAfter is how long a working or waiting session can go quiet before

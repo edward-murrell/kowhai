@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"kowhai/internal/store"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 // Action is something an actor wants to do.

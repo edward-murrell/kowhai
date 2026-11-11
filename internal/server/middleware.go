@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"kowhai/internal/api"
+	"github.com/edward-murrell/kowhai/internal/api"
 )
 
 // limitAPI rate-limits the API and MCP endpoints, leaving SSE streams and

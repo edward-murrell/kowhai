@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/notify"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/notify"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 func (s *Service) prefOn(ctx context.Context, tx *store.Tx, userID, key string) (bool, error) {

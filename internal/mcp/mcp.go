@@ -17,8 +17,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/oapi-codegen/nullable"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/service"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/service"
 )
 
 const (

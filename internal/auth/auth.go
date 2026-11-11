@@ -20,8 +20,8 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 
-	"kowhai/internal/service"
-	"kowhai/internal/store"
+	"github.com/edward-murrell/kowhai/internal/service"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 const (

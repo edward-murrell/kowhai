@@ -7,7 +7,7 @@ generate:
   strict-server: true
   embedded-spec: true
 additional-imports:
-  - package: kowhai/internal/apitypes
+  - package: github.com/edward-murrell/kowhai/internal/apitypes
     alias: .
 output-options:
   nullable-type: true

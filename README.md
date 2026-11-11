@@ -1,8 +1,27 @@
 # Kōwhai
 
+[![ci](https://github.com/edward-murrell/kowhai/actions/workflows/ci.yml/badge.svg)](https://github.com/edward-murrell/kowhai/actions/workflows/ci.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+
 Kōwhai is a self-hosted board app for teams of up to 1000 people. It has workspaces, boards, lists and cards, with live updates, search, notifications, templates and repeating cards. Claude Code can read and update cards through an MCP server, and a hook keeps each card's session status up to date.
 
 It runs as one Go binary with the web app built in. Data lives in SQLite. Attachments and backups go to Garage or any S3-compatible store. People sign in with OIDC, tested against Kanidm and Authelia.
+
+## Install
+
+Releases include binaries for Linux and macOS, and a container image:
+
+```sh
+docker pull ghcr.io/edward-murrell/kowhai:1
+```
+
+To get only the `kowhai link` and `kowhai hook` commands for Claude Code:
+
+```sh
+go install github.com/edward-murrell/kowhai/cmd/kowhai@latest
+```
+
+A binary built this way has no web app inside, so use a release build to run the server.
 
 ## Quick start
 
@@ -68,3 +87,7 @@ internal/hook/       Claude Code hook and link commands
 web/                 Vue app
 deploy/              Compose, Garage, Authelia and CI checks
 ```
+
+## Licence
+
+Kōwhai is free software under the [GNU General Public License version 3](LICENSE). See [CONTRIBUTING.md](CONTRIBUTING.md) to help and [SECURITY.md](SECURITY.md) to report a security problem.

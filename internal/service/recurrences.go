@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"time"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/recur"
-	"kowhai/internal/store"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/recur"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 func parseRule(rrule, dtstart, tz string) (*recur.Rule, error) {

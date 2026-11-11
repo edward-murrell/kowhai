@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	. "kowhai/internal/apitypes"
-	"kowhai/internal/testenv"
+	. "github.com/edward-murrell/kowhai/internal/apitypes"
+	"github.com/edward-murrell/kowhai/internal/testenv"
 )
 
 func setup(t *testing.T) (*testenv.Env, *testenv.Client, Workspace, Board, []List) {

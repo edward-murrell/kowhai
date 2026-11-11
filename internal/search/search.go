@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode"
 
-	"kowhai/internal/store"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 const (

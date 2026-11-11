@@ -19,8 +19,8 @@ import (
 
 	"github.com/oklog/ulid/v2"
 
-	"kowhai/internal/events"
-	"kowhai/internal/store"
+	"github.com/edward-murrell/kowhai/internal/events"
+	"github.com/edward-murrell/kowhai/internal/store"
 )
 
 // Clock lets tests control time.

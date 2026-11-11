@@ -3,8 +3,8 @@ package api
 import (
 	"net/http"
 
-	apispec "kowhai/api"
-	"kowhai/internal/service"
+	apispec "github.com/edward-murrell/kowhai/api"
+	"github.com/edward-murrell/kowhai/internal/service"
 )
 
 // Mount registers the REST API, its event streams and its docs on mux.
